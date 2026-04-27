@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,7 +38,7 @@
 <div class="toolbar">
   <input type="text" id="srch" placeholder=" Search site, city, partner, type..." oninput="render()"/>
   <button class="b-add" onclick="showForm(-1)">+ Add New Site</button>
-  <button class="b-exp" onclick="exportData()"> Export JSON</button>
+  <button class="b-exp" onclick="exportData()"> Export Excel</button>
 </div>
 
 <!-- Add/Edit Form -->
@@ -115,7 +116,7 @@
       <tr>
         <th>#</th><th>Site Name</th><th>Type</th><th>City</th><th>Partner</th>
         <th>POC</th><th>Comm.Close</th><th>LOI Target</th><th>LOI Actual</th>
-        <th>WO Target</th><th>WO Actual</th><th>Amendment</th><th>Status</th><th>Actions</th>
+        <th>WO Target</th><th>WO Actual</th><th>Amendment</th><th>Status</th><th>Documents</th><th>Actions</th>
       </tr>
     </thead>
     <tbody id="tb"></tbody>
