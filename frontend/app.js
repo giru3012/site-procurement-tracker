@@ -355,7 +355,7 @@ function exportData() {
     (s.documents||[]).map(d => d.name).join('; ')
   ].map(v => '"' + (v||'').replace(/"/g,'""') + '"').join(','));
   const csv = [headers.join(','), ...rows].join('\n');
-  const blob = new Blob(['\xEF\xBB\xBF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'SiteTracker_' + new Date().toISOString().split('T')[0] + '.csv';
