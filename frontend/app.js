@@ -429,7 +429,7 @@ async function loadVisitCount() {
   try {
     const res = await fetch(API + '/visits/today');
     const data = await res.json();
-    document.getElementById('visitCount').textContent = 'Visits today: ' + data.count;
+    document.getElementById('visitCount').textContent = 'Visits today: ' + data.count + ' (' + (data.visitors || []).join(', ') + ')';
   } catch(e) {}
 }
 
