@@ -157,7 +157,7 @@ app.post('/api/sites/:siteId/documents/:docId/amend', upload.single('file'), (re
   };
 
   sites[idx].amendments = [...(sites[idx].amendments || []), amendment];
-  sites[idx].activityLog = [...(sites[idx].activityLog || []), { action: `Amended "${oldDoc.name}" (v${oldDoc.version} Ã¢â€ â€™ v${newVersion})`, by: req.body.amendedBy || 'System', at: new Date().toISOString() }];
+  sites[idx].activityLog = [...(sites[idx].activityLog || []), { action: `Amended "${oldDoc.name}" (v${oldDoc.version} ÃƒÂ¢Ã¢â‚¬ Ã¢â‚¬â„¢ v${newVersion})`, by: req.body.amendedBy || 'System', at: new Date().toISOString() }];
   sites[idx].updatedAt = new Date().toISOString();
   writeSites(sites);
   res.json({ amendment, document: sites[idx].documents[docIdx] });
@@ -187,6 +187,24 @@ const EMAIL_CONFIG = {
   }
 };
 
+// --- VISIT TRACKING ---
+const VISITS_FILE = path.join(__dirname, 'data', 'visits.json');
+if (!fs.existsSync(VISITS_FILE)) fs.writeFileSync(VISITS_FILE, '[]');
+
+app.post('/api/visits', (req, res) => {
+  const visits = JSON.parse(fs.readFileSync(VISITS_FILE, 'utf8'));
+  visits.push({ user: req.body.user, at: new Date().toISOString() });
+  fs.writeFileSync(VISITS_FILE, JSON.stringify(visits));
+  res.json({ success: true });
+});
+
+app.get('/api/visits/today', (req, res) => {
+  const visits = JSON.parse(fs.readFileSync(VISITS_FILE, 'utf8'));
+  const today = new Date().toISOString().split('T')[0];
+  const todayVisits = visits.filter(v => v.at && v.at.startsWith(today));
+  res.json({ count: todayVisits.length, visitors: [...new Set(todayVisits.map(v => v.user))] });
+});
+
 async function sendOverdueEmails() {
   const sites = readSites();
   const today = new Date().toISOString().split('T')[0];
@@ -203,13 +221,13 @@ async function sendOverdueEmails() {
 
     if (overdue.length && site.pocEmail) {
       const daysDiff = (d) => Math.floor((new Date() - new Date(d)) / 86400000);
-      const items = overdue.map(o => `Ã¢â‚¬Â¢ ${o.task} Ã¢â‚¬â€ due ${o.dueDate} (${daysDiff(o.dueDate)} days overdue)`).join('\n');
+      const items = overdue.map(o => `ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${o.task} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â due ${o.dueDate} (${daysDiff(o.dueDate)} days overdue)`).join('\n');
 
       await transporter.sendMail({
         from: '"Site Procurement Tracker" <tracker-noreply@yourcompany.com>',
         to: site.pocEmail,
-        subject: `Ã¢Å¡ Ã¯Â¸Â [OVERDUE] ${site.siteName} Ã¢â‚¬â€ Action Required`,
-        text: `Hi ${site.pocName},\n\nThe following tasks for site "${site.siteName}" (${site.city}) are overdue:\n\n${items}\n\nPlease update the tracker or escalate if blocked.\n\nÃ¢â‚¬â€ Site Procurement Tracker`
+        subject: `ÃƒÂ¢Ã…Â¡ ÃƒÂ¯Ã‚Â¸Ã‚Â [OVERDUE] ${site.siteName} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Action Required`,
+        text: `Hi ${site.pocName},\n\nThe following tasks for site "${site.siteName}" (${site.city}) are overdue:\n\n${items}\n\nPlease update the tracker or escalate if blocked.\n\nÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Site Procurement Tracker`
       }).catch(err => console.error('Email failed for', site.siteName, err.message));
     }
   }
