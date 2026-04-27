@@ -346,13 +346,14 @@ async function deleteDoc(siteId, docId) {
 
 // --- EXPORT ---
 function exportData() {
-  const headers = ['Site Name','Type','City','Partner','POC Name','POC Email','Commercial Close','LOI Target','LOI Actual','WO Target','WO Actual','Amendment Status','Remarks','Status','Documents'];
+  const headers = ['Site Name','Type','City','Partner','POC Name','POC Email','Commercial Close','LOI Target','LOI Actual','WO Target','WO Actual','Amendment Status','Remarks','Status','Documents','Document Links'];
   const rows = sites.map(s => [
     s.siteName, s.siteType, s.city, s.partnerName, s.pocName, s.pocEmail,
     s.commercialCloseDate, s.loiTargetDate, s.loiActualDate, s.woTargetDate, s.woActualDate,
     s.amendmentStatus, s.remarks,
     getStatus(s)==='d'?'Completed':getStatus(s)==='w'?'WO Pending':getStatus(s)==='a'?'Amendment':'LOI Pending',
-    (s.documents||[]).map(d => d.name).join('; ')
+    (s.documents||[]).map(d => d.name).join('; '),
+    (s.documents||[]).map(d => window.location.origin + d.path).join('; ')
   ].map(v => '"' + (v||'').replace(/"/g,'""') + '"').join(','));
   const csv = [headers.join(','), ...rows].join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
