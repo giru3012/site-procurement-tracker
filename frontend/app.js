@@ -4,9 +4,32 @@ const ADMIN_PIN = '123456'; // Change this
 let sites = [];
 let editId = null;
 let adminMode = false;
-let currentUser = prompt('Enter your name (for tracking):') || 'User';
+let currentUser = '';
 
-document.getElementById('userLabel').textContent = 'User: ' + currentUser;
+// Show login screen - mandatory
+function showLogin() {
+  document.getElementById('loginOverlay').style.display = 'flex';
+}
+
+function doLogin() {
+  const name = document.getElementById('loginName').value.trim();
+  if (!name) { document.getElementById('loginError').style.display = 'block'; return; }
+  currentUser = name;
+  localStorage.setItem('tracker_user', name);
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('userLabel').textContent = 'User: ' + currentUser;
+  fetchSites();
+}
+
+// Check if user already logged in
+const savedUser = localStorage.getItem('tracker_user');
+if (savedUser) {
+  currentUser = savedUser;
+  document.getElementById('userLabel').textContent = 'User: ' + currentUser;
+} else {
+  showLogin();
+}
+
 document.getElementById('dtL').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
 // --- API CALLS ---
@@ -393,6 +416,13 @@ function showActivityLog() {
   panel.scrollIntoView({ behavior: 'smooth' });
 }
 
+// --- LOGOUT ---
+function logout() {
+  localStorage.removeItem('tracker_user');
+  currentUser = '';
+  showLogin();
+}
+
 // --- ADMIN ---
 function togAdm() {
   if (!adminMode) {
@@ -423,4 +453,4 @@ function verifyPin() {
 }
 
 // --- INIT ---
-fetchSites();
+if (currentUser) fetchSites();
