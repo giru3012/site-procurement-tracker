@@ -18,8 +18,7 @@ fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, '[]');
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../frontend')));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'frontend')));
 app.use('/uploads', express.static(UPLOADS_DIR));
 
 // File upload config
