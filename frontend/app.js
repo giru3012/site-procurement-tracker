@@ -6,7 +6,7 @@ let editId = null;
 let adminMode = false;
 let currentUser = prompt('Enter your name (for tracking):') || 'User';
 
-document.getElementById('userLabel').textContent = '&#128100; ' + currentUser;
+document.getElementById('userLabel').textContent = 'User: ' + currentUser;
 document.getElementById('dtL').textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
 // --- API CALLS ---
@@ -87,14 +87,14 @@ function render() {
   tb.innerHTML = filtered.map((s, i) => {
     const st = getStatus(s), ol = isLoiOverdue(s), ow = isWoOverdue(s);
     const rc = ol ? 'rol' : ow ? 'row' : st === 'l' ? 'rl' : st === 'w' ? 'rw' : st === 'd' ? 'rd' : 'ra';
-    const badge = ol ? '<span class="badge bo">&#9888; LOI OVERDUE (' + daysDiff(s.loiTargetDate) + 'd)</span>' :
-                  ow ? '<span class="badge bo">&#9888; WO OVERDUE (' + daysDiff(s.woTargetDate) + 'd)</span>' :
+    const badge = ol ? '<span class="badge bo">? LOI OVERDUE (' + daysDiff(s.loiTargetDate) + 'd)</span>' :
+                  ow ? '<span class="badge bo">? WO OVERDUE (' + daysDiff(s.woTargetDate) + 'd)</span>' :
                   st === 'l' ? '<span class="badge bl">LOI Pending</span>' :
                   st === 'w' ? '<span class="badge bw">WO Pending</span>' :
                   st === 'd' ? '<span class="badge bd">Completed</span>' :
                   '<span class="badge ba">Amendment</span>';
     const typeB = s.siteType ? '<span class="stb s' + s.siteType + '">' + s.siteType + '</span>' : '-';
-    const delBtn = adminMode ? ' <button class="b-dl" onclick="deleteSite(\'' + s.id + '\')">&#128465;</button>' : '';
+    const delBtn = adminMode ? ' <button class="b-dl" onclick="deleteSite(\'' + s.id + '\')">[Del]</button>' : '';
     const docCount = (s.documents || []).length;
 
     return `<tr class="${rc}">
@@ -105,8 +105,8 @@ function render() {
       <td>${s.woActualDate || '-'}</td><td>${s.amendmentStatus !== 'None' ? s.amendmentStatus : '-'}</td>
       <td>${badge}</td>
       <td style="white-space:nowrap">
-        <button class="b-view" onclick="showDetail('${s.id}')">&#128194; View (${docCount})</button>
-        <button class="b-ed" onclick="showForm('${s.id}')">&#9999;</button>${delBtn}
+        <button class="b-view" onclick="showDetail('${s.id}')">[Docs] View (${docCount})</button>
+        <button class="b-ed" onclick="showForm('${s.id}')">[Edit]</button>${delBtn}
       </td>
     </tr>`;
   }).join('');
@@ -165,9 +165,9 @@ function showForm(id) {
   // Show existing documents when editing
   const existingDiv = document.getElementById('existingDocs');
   if (s && s.documents && s.documents.length > 0) {
-    existingDiv.innerHTML = '<label style="font-size:11px;font-weight:bold;color:#555;">&#128196; Already Uploaded:</label>' +
+    existingDiv.innerHTML = '<label style="font-size:11px;font-weight:bold;color:#555;">Already Uploaded:</label>' +
       s.documents.map(d => `<div class="existing-doc-item">
-        <span>&#128196;</span>
+        <span>?</span>
         <a href="${d.path}" target="_blank">${d.name}</a>
         <span style="color:#888;">[${d.category}] v${d.version}</span>
       </div>`).join('');
@@ -254,47 +254,47 @@ function showDetail(id) {
 
   const docs = (s.documents || []).map(d => `
     <div class="doc-item">
-      <span>&#128196; <a href="${d.path}" target="_blank">${d.name}</a></span>
+      <span><a href="${d.path}" target="_blank">${d.name}</a></span>
       <span class="stb s${d.category || 'Other'}">${d.category || 'Other'}</span>
       <span style="color:#999;font-size:10px;">v${d.version} | ${d.uploadedBy} | ${d.uploadedAt ? d.uploadedAt.split('T')[0] : ''}</span>
-      <button class="b-rm" onclick="amendDoc('${s.id}','${d.id}','${d.name}')">&#128221; Amend</button>
-      ${adminMode ? '<button class="b-dl" onclick="deleteDoc(\'' + s.id + '\',\'' + d.id + '\')">&#128465;</button>' : ''}
+      <button class="b-rm" onclick="amendDoc('${s.id}','${d.id}','${d.name}')">[Amend]</button>
+      ${adminMode ? '<button class="b-dl" onclick="deleteDoc(\'' + s.id + '\',\'' + d.id + '\')">[Del]</button>' : ''}
     </div>
   `).join('') || '<p style="color:#999;font-size:11px;">No documents uploaded yet.</p>';
 
   const amendments = (s.amendments || []).map(a => `
     <div class="amend-item">
-      <strong>${a.documentName}</strong> v${a.previousVersion} &#8594; v${a.newVersion}<br/>
+      <strong>${a.documentName}</strong> v${a.previousVersion} ? v${a.newVersion}<br/>
       ${a.description}<br/>
       <span style="color:#999;">By ${a.amendedBy} on ${a.amendedAt ? a.amendedAt.split('T')[0] : ''}</span>
     </div>
   `).join('') || '<p style="color:#999;font-size:11px;">No amendments.</p>';
 
   const activity = (s.activityLog || []).slice(-10).reverse().map(a => `
-    <div class="activity-item">&#128204; ${a.action} &#8212; <em>${a.by}</em> (${a.at ? a.at.split('T')[0] : ''})</div>
+    <div class="activity-item">? ${a.action} ? <em>${a.by}</em> (${a.at ? a.at.split('T')[0] : ''})</div>
   `).join('');
 
   panel.innerHTML = `
     <div class="detail-header">
-      <h2>&#128194; ${s.siteName} &#8212; ${s.city}</h2>
-      <button class="b-cn" onclick="document.getElementById('detailPanel').style.display='none'">&#10005; Close</button>
+      <h2>? ${s.siteName} ? ${s.city}</h2>
+      <button class="b-cn" onclick="document.getElementById('detailPanel').style.display='none'">X Close</button>
     </div>
     <div class="detail-section">
-      <h3>&#128196; Documents</h3>
+      <h3>Documents</h3>
       ${docs}
       <div class="upload-zone">
         <label><strong>Upload New Document:</strong></label><br/>
         <select id="docCat"><option value="Commercial">Commercial</option><option value="LOI">LOI</option><option value="Work Order">Work Order</option><option value="Amendment">Amendment</option><option value="Other">Other</option></select>
         <input type="file" id="docFiles" multiple accept=".pdf,.doc,.docx,.xlsx,.xls,.jpg,.jpeg,.png"/>
-        <button class="b-sv" onclick="uploadDocs('${s.id}')" style="margin-top:5px;">&#11014; Upload</button>
+        <button class="b-sv" onclick="uploadDocs('${s.id}')" style="margin-top:5px;">Upload</button>
       </div>
     </div>
     <div class="detail-section">
-      <h3>&#128221; Amendment History</h3>
+      <h3>[Amend]ment History</h3>
       ${amendments}
     </div>
     <div class="detail-section">
-      <h3>&#128203; Activity Log</h3>
+      <h3>? Activity Log</h3>
       ${activity}
     </div>
   `;
@@ -351,7 +351,7 @@ function togAdm() {
     document.getElementById('po').style.display = 'block';
   } else {
     adminMode = false;
-    document.getElementById('aBtn').textContent = '&#128274; Admin Mode';
+    document.getElementById('aBtn').textContent = 'Admin Mode [OFF]';
     document.getElementById('aBtn').className = 'b-adm';
     document.getElementById('adb').style.display = 'none';
     render();
@@ -361,7 +361,7 @@ function togAdm() {
 function verifyPin() {
   if (document.getElementById('pIn').value === ADMIN_PIN) {
     adminMode = true;
-    document.getElementById('aBtn').textContent = '&#128275; Admin ON';
+    document.getElementById('aBtn').textContent = 'Admin Mode [ON]';
     document.getElementById('aBtn').className = 'b-adm-on';
     document.getElementById('adb').style.display = 'block';
     document.getElementById('po').style.display = 'none';
