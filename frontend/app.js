@@ -11,8 +11,16 @@ document.getElementById('dtL').textContent = new Date().toLocaleDateString('en-I
 
 // --- API CALLS ---
 async function fetchSites() {
-  const res = await fetch(API + '/sites');
-  sites = await res.json();
+  try {
+    const res = await fetch(API + '/sites');
+    sites = await res.json();
+    // Backup to localStorage
+    localStorage.setItem('sites_backup', JSON.stringify(sites));
+  } catch(e) {
+    // If server fails, load from localStorage
+    const backup = localStorage.getItem('sites_backup');
+    if (backup) sites = JSON.parse(backup);
+  }
   render();
   checkOverdue();
 }
@@ -352,6 +360,36 @@ function exportData() {
   a.href = URL.createObjectURL(blob);
   a.download = 'SiteTracker_' + new Date().toISOString().split('T')[0] + '.csv';
   a.click();
+}
+
+// --- USER ACTIVITY LOG ---
+function showActivityLog() {
+  const panel = document.getElementById('detailPanel');
+  panel.style.display = 'block';
+
+  // Collect all activity from all sites, sorted by date (newest first)
+  let allActivity = [];
+  sites.forEach(s => {
+    (s.activityLog || []).forEach(a => {
+      allActivity.push({ site: s.siteName, city: s.city, action: a.action, by: a.by, at: a.at });
+    });
+  });
+  allActivity.sort((a, b) => (b.at || '').localeCompare(a.at || ''));
+
+  const rows = allActivity.slice(0, 50).map(a => 
+    `<tr><td>${a.at ? a.at.split('T')[0] : '-'}</td><td>${a.at ? a.at.split('T')[1].substring(0,5) : ''}</td><td><strong>${a.by || '-'}</strong></td><td>${a.site} (${a.city})</td><td>${a.action}</td></tr>`
+  ).join('');
+
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h2 style="color:#1a3c5e;font-size:16px;">User Activity Log (Last 50 actions)</h2>
+      <button class="b-cn" onclick="document.getElementById('detailPanel').style.display='none'">X Close</button>
+    </div>
+    <table style="font-size:11px;">
+      <thead><tr><th>Date</th><th>Time</th><th>User</th><th>Site</th><th>Action</th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="5" style="text-align:center;color:#999;">No activity yet.</td></tr>'}</tbody>
+    </table>`;
+  panel.scrollIntoView({ behavior: 'smooth' });
 }
 
 // --- ADMIN ---
