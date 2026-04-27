@@ -96,6 +96,7 @@ function render() {
     const typeB = s.siteType ? '<span class="stb s' + s.siteType + '">' + s.siteType + '</span>' : '-';
     const delBtn = adminMode ? ' <button class="b-dl" onclick="deleteSite(\'' + s.id + '\')">[Del]</button>' : '';
     const docCount = (s.documents || []).length;
+    const docNames = (s.documents || []).map(d => '<a href="' + d.path + '" target="_blank" style="font-size:10px;color:#2980b9;display:block;">' + d.category + ': ' + d.name + '</a>').join('');
 
     return `<tr class="${rc}">
       <td>${i + 1}</td><td><strong>${s.siteName || ''}</strong></td><td>${typeB}</td>
@@ -104,6 +105,7 @@ function render() {
       <td>${s.loiActualDate || '-'}</td><td style="font-weight:bold">${s.woTargetDate || '-'}</td>
       <td>${s.woActualDate || '-'}</td><td>${s.amendmentStatus !== 'None' ? s.amendmentStatus : '-'}</td>
       <td>${badge}</td>
+      <td style="max-width:180px;font-size:10px;">${docNames || '<span style="color:#999">No docs</span>'}</td>
       <td style="white-space:nowrap">
         <button class="b-view" onclick="showDetail('${s.id}')">[Docs] View (${docCount})</button>
         <button class="b-ed" onclick="showForm('${s.id}')">[Edit]</button>${delBtn}
@@ -336,10 +338,19 @@ async function deleteDoc(siteId, docId) {
 
 // --- EXPORT ---
 function exportData() {
-  const blob = new Blob([JSON.stringify(sites, null, 2)], { type: 'application/json' });
+  const headers = ['Site Name','Type','City','Partner','POC Name','POC Email','Commercial Close','LOI Target','LOI Actual','WO Target','WO Actual','Amendment Status','Remarks','Status','Documents'];
+  const rows = sites.map(s => [
+    s.siteName, s.siteType, s.city, s.partnerName, s.pocName, s.pocEmail,
+    s.commercialCloseDate, s.loiTargetDate, s.loiActualDate, s.woTargetDate, s.woActualDate,
+    s.amendmentStatus, s.remarks,
+    getStatus(s)==='d'?'Completed':getStatus(s)==='w'?'WO Pending':getStatus(s)==='a'?'Amendment':'LOI Pending',
+    (s.documents||[]).map(d => d.name).join('; ')
+  ].map(v => '"' + (v||'').replace(/"/g,'""') + '"').join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['\xEF\xBB\xBF' + csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'SiteTrackerExport_' + new Date().toISOString().split('T')[0] + '.json';
+  a.download = 'SiteTracker_' + new Date().toISOString().split('T')[0] + '.csv';
   a.click();
 }
 
