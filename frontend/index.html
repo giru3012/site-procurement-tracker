@@ -9,16 +9,16 @@
 </head>
 <body>
 <header>
-  <h1>&#127959; Site Commercial Tracker</h1>
+  <h1> Site Commercial Tracker</h1>
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
     <span id="dtL"></span>
     <span id="userLabel" style="font-size:12px;background:#27ae60;padding:3px 8px;border-radius:4px;"></span>
-    <button id="aBtn" class="b-adm" onclick="togAdm()">&#128272; Admin Mode</button>
+    <button id="aBtn" class="b-adm" onclick="togAdm()">[Lock] Admin Mode</button>
   </div>
 </header>
 
-<div class="adb" id="adb"><span>&#128275; Admin Mode ON</span></div>
-<div class="ovb" id="ovb"><strong>&#9888; Overdue Actions:</strong><ul id="ovl"></ul></div>
+<div class="adb" id="adb"><span>[Unlock] Admin Mode ON</span></div>
+<div class="ovb" id="ovb"><strong>[!] Overdue Actions:</strong><ul id="ovl"></ul></div>
 
 <div class="dash">
   <div class="sec">By Site Type</div>
@@ -35,9 +35,9 @@
 </div>
 
 <div class="toolbar">
-  <input type="text" id="srch" placeholder="&#128269; Search site, city, partner, type..." oninput="render()"/>
-  <button class="b-add" onclick="showForm(-1)">&#10133; Add New Site</button>
-  <button class="b-exp" onclick="exportData()">&#128190; Export JSON</button>
+  <input type="text" id="srch" placeholder=" Search site, city, partner, type..." oninput="render()"/>
+  <button class="b-add" onclick="showForm(-1)">+ Add New Site</button>
+  <button class="b-exp" onclick="exportData()"> Export JSON</button>
 </div>
 
 <!-- Add/Edit Form -->
@@ -101,7 +101,7 @@
   </div>
   <div class="fa">
     <button class="b-cn" onclick="hideForm()">Cancel</button>
-    <button class="b-sv" onclick="saveSite()">&#128190; Save Site</button>
+    <button class="b-sv" onclick="saveSite()"> Save Site</button>
   </div>
 </div>
 
@@ -125,7 +125,7 @@
 <!-- Admin PIN Modal -->
 <div id="po" style="display:none;">
   <div class="pb">
-    <h3>&#128272; Admin PIN Required</h3>
+    <h3>[Lock] Admin PIN Required</h3>
     <input type="password" id="pIn" maxlength="6" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" onkeydown="if(event.key==='Enter')verifyPin()"/>
     <div class="pe" id="pe">Incorrect PIN.</div>
     <div class="pa">
