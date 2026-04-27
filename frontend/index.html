@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Site Commercial Tracker</title>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<header>
+  <h1>&#127959; Site Commercial Tracker</h1>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <span id="dtL"></span>
+    <span id="userLabel" style="font-size:12px;background:#27ae60;padding:3px 8px;border-radius:4px;"></span>
+    <button id="aBtn" class="b-adm" onclick="togAdm()">&#128272; Admin Mode</button>
+  </div>
+</header>
+
+<div class="adb" id="adb"><span>&#128275; Admin Mode ON</span></div>
+<div class="ovb" id="ovb"><strong>&#9888; Overdue Actions:</strong><ul id="ovl"></ul></div>
+
+<div class="dash">
+  <div class="sec">By Site Type</div>
+  <div class="card c1"><div class="num" id="cT">0</div><div class="lbl">Total</div></div>
+  <div class="card c2"><div class="num" id="cS">0</div><div class="lbl">SSD</div></div>
+  <div class="card c3"><div class="num" id="cD">0</div><div class="lbl">DG</div></div>
+  <div class="card c4"><div class="num" id="cF">0</div><div class="lbl">FC</div></div>
+  <div class="card c5"><div class="num" id="cO">0</div><div class="lbl">Other</div></div>
+  <div class="sec">By Status</div>
+  <div class="card c6"><div class="num" id="cL">0</div><div class="lbl">LOI Pending</div></div>
+  <div class="card c7"><div class="num" id="cW">0</div><div class="lbl">WO Pending</div></div>
+  <div class="card c8"><div class="num" id="cDn">0</div><div class="lbl">Completed</div></div>
+  <div class="card c9"><div class="num" id="cA">0</div><div class="lbl">Amendment</div></div>
+</div>
+
+<div class="toolbar">
+  <input type="text" id="srch" placeholder="&#128269; Search site, city, partner, type..." oninput="render()"/>
+  <button class="b-add" onclick="showForm(-1)">&#10133; Add New Site</button>
+  <button class="b-exp" onclick="exportData()">&#128190; Export JSON</button>
+</div>
+
+<!-- Add/Edit Form -->
+<div id="fp" style="display:none;">
+  <h2 id="fpT">Add New Site</h2>
+  <div class="fg">
+    <div class="fl"><label>Site Name *</label><input type="text" id="fN" class="req"/></div>
+    <div class="fl"><label>Site Type *</label>
+      <select id="fTy" class="req">
+        <option value="">-- Select --</option>
+        <option value="SSD">SSD</option><option value="DG">DG</option>
+        <option value="FC">FC</option><option value="Other">Other</option>
+      </select>
+    </div>
+    <div class="fl"><label>City *</label><input type="text" id="fCi" class="req"/></div>
+    <div class="fl"><label>Partner Name *</label><input type="text" id="fPa" class="req"/></div>
+    <div class="fl"><label>POC Name *</label><input type="text" id="fPn" class="req"/></div>
+    <div class="fl"><label>POC Email *</label><input type="email" id="fPe" class="req"/></div>
+    <div class="fl"><label>Commercial Close Date *</label><input type="date" id="fCd" class="req"/></div>
+    <div class="fl"><label>LOI Target Date *</label><input type="date" id="fLt" class="req"/></div>
+    <div class="fl"><label>LOI Actual Sent Date</label><input type="date" id="fLa"/></div>
+    <div class="fl"><label>WO Target Date *</label><input type="date" id="fWt" class="req"/></div>
+    <div class="fl"><label>WO Actual Date</label><input type="date" id="fWa"/></div>
+    <div class="fl"><label>Amendment Status</label>
+      <select id="fAm">
+        <option value="None">None</option><option value="Raised">Raised</option>
+        <option value="In Progress">In Progress</option><option value="Resolved">Resolved</option>
+      </select>
+    </div>
+    <div class="fl fgf"><label>Remarks</label><textarea id="fRm" rows="2"></textarea></div>
+    <div class="fl fgf" id="docUploadSection">
+      <label style="font-size:13px;color:#1a3c5e;font-weight:bold;">📎 Upload Documents</label>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;">
+        <div class="doc-upload-box">
+          <label>Commercial Agreement</label>
+          <input type="file" id="fDocCommercial" accept=".pdf,.doc,.docx,.xlsx,.jpg,.jpeg,.png"/>
+        </div>
+        <div class="doc-upload-box">
+          <label>BRS (Business Requirement Sheet)</label>
+          <input type="file" id="fDocBRS" accept=".pdf,.doc,.docx,.xlsx,.jpg,.jpeg,.png"/>
+        </div>
+        <div class="doc-upload-box">
+          <label>LOI Email / Letter</label>
+          <input type="file" id="fDocLOI" accept=".pdf,.doc,.docx,.xlsx,.jpg,.jpeg,.png,.eml,.msg"/>
+        </div>
+        <div class="doc-upload-box">
+          <label>Work Order</label>
+          <input type="file" id="fDocWO" accept=".pdf,.doc,.docx,.xlsx,.jpg,.jpeg,.png"/>
+        </div>
+        <div class="doc-upload-box">
+          <label>Site Survey / Layout</label>
+          <input type="file" id="fDocSurvey" accept=".pdf,.doc,.docx,.xlsx,.jpg,.jpeg,.png"/>
+        </div>
+        <div class="doc-upload-box">
+          <label>Other Documents</label>
+          <input type="file" id="fDocOther" multiple accept=".pdf,.doc,.docx,.xlsx,.xls,.jpg,.jpeg,.png"/>
+        </div>
+      </div>
+      <div id="existingDocs" style="margin-top:10px;"></div>
+    </div>
+  </div>
+  <div class="fa">
+    <button class="b-cn" onclick="hideForm()">Cancel</button>
+    <button class="b-sv" onclick="saveSite()">&#128190; Save Site</button>
+  </div>
+</div>
+
+<!-- Site Detail Panel -->
+<div id="detailPanel" style="display:none;"></div>
+
+<!-- Main Table -->
+<div class="tw">
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Site Name</th><th>Type</th><th>City</th><th>Partner</th>
+        <th>POC</th><th>Comm.Close</th><th>LOI Target</th><th>LOI Actual</th>
+        <th>WO Target</th><th>WO Actual</th><th>Amendment</th><th>Status</th><th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="tb"></tbody>
+  </table>
+</div>
+
+<!-- Admin PIN Modal -->
+<div id="po" style="display:none;">
+  <div class="pb">
+    <h3>&#128272; Admin PIN Required</h3>
+    <input type="password" id="pIn" maxlength="6" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" onkeydown="if(event.key==='Enter')verifyPin()"/>
+    <div class="pe" id="pe">Incorrect PIN.</div>
+    <div class="pa">
+      <button class="b-cn" onclick="document.getElementById('po').style.display='none'">Cancel</button>
+      <button class="b-sv" onclick="verifyPin()">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
