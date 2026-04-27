@@ -18,6 +18,7 @@ function doLogin() {
   localStorage.setItem('tracker_user', name);
   document.getElementById('loginOverlay').style.display = 'none';
   document.getElementById('userLabel').textContent = 'User: ' + currentUser;
+  trackVisit();
   fetchSites();
 }
 
@@ -416,6 +417,22 @@ function showActivityLog() {
   panel.scrollIntoView({ behavior: 'smooth' });
 }
 
+// --- VISIT COUNTER ---
+async function trackVisit() {
+  try {
+    await fetch(API + '/visits', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user: currentUser }) });
+  } catch(e) {}
+  loadVisitCount();
+}
+
+async function loadVisitCount() {
+  try {
+    const res = await fetch(API + '/visits/today');
+    const data = await res.json();
+    document.getElementById('visitCount').textContent = 'Visits today: ' + data.count;
+  } catch(e) {}
+}
+
 // --- LOGOUT ---
 function logout() {
   localStorage.removeItem('tracker_user');
@@ -453,4 +470,4 @@ function verifyPin() {
 }
 
 // --- INIT ---
-if (currentUser) fetchSites();
+if (currentUser) { trackVisit(); fetchSites(); }
