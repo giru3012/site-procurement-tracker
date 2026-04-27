@@ -182,6 +182,7 @@ function showForm(id) {
   document.getElementById('fPa').value = s ? s.partnerName : '';
   document.getElementById('fPn').value = s ? s.pocName : '';
   document.getElementById('fPe').value = s ? s.pocEmail : '';
+  document.getElementById('fMe').value = s ? s.managerEmail : '';
   document.getElementById('fCd').value = s ? s.commercialCloseDate : '';
   document.getElementById('fLt').value = s ? s.loiTargetDate : '';
   document.getElementById('fLa').value = s ? s.loiActualDate : '';
@@ -232,6 +233,7 @@ async function saveSite() {
     partnerName: document.getElementById('fPa').value.trim(),
     pocName: document.getElementById('fPn').value.trim(),
     pocEmail: document.getElementById('fPe').value.trim(),
+    managerEmail: document.getElementById('fMe').value.trim(),
     commercialCloseDate: document.getElementById('fCd').value,
     loiTargetDate: document.getElementById('fLt').value,
     loiActualDate: document.getElementById('fLa').value,
