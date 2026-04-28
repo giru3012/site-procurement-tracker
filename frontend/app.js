@@ -148,10 +148,14 @@ function render() {
 
 function updateCards(list) {
   document.getElementById('cT').textContent = list.length;
-  document.getElementById('cS').textContent = list.filter(s => s.siteType === 'SSD').length;
-  document.getElementById('cD').textContent = list.filter(s => s.siteType === 'DG').length;
-  document.getElementById('cF').textContent = list.filter(s => s.siteType === 'FC').length;
-  document.getElementById('cO').textContent = list.filter(s => s.siteType === 'Other').length;
+  document.getElementById('cDG').textContent = list.filter(s => s.siteType === 'DG').length;
+  document.getElementById('cAG').textContent = list.filter(s => s.siteType === 'AG').length;
+  document.getElementById('cSSD').textContent = list.filter(s => s.siteType === 'SSD').length;
+  document.getElementById('cProd').textContent = list.filter(s => s.siteType === 'Produce').length;
+  document.getElementById('cPer').textContent = list.filter(s => s.siteType === 'Perishable').length;
+  document.getElementById('cPP').textContent = list.filter(s => s.siteType === 'Produce & Perishable').length;
+  document.getElementById('cFC').textContent = list.filter(s => s.siteType === 'FC').length;
+  document.getElementById('cOth').textContent = list.filter(s => s.siteType === 'Others').length;
   document.getElementById('cL').textContent = list.filter(s => getStatus(s) === 'l').length;
   document.getElementById('cW').textContent = list.filter(s => getStatus(s) === 'w').length;
   document.getElementById('cDn').textContent = list.filter(s => getStatus(s) === 'd').length;
@@ -433,6 +437,46 @@ async function loadVisitCount() {
     const data = await res.json();
     document.getElementById('visitCount').textContent = 'Visits today: ' + data.count + ' (' + (data.visitors || []).join(', ') + ')';
   } catch(e) {}
+}
+
+// --- MONTHLY FILTER ---
+function showMonthlyReport() {
+  const month = document.getElementById('monthFilter').value;
+  if (!month) { alert('Please select a month'); return; }
+
+  const [year, mon] = month.split('-');
+  const monthName = new Date(year, mon - 1).toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+
+  const loiSites = sites.filter(s => s.loiActualDate && s.loiActualDate.startsWith(month));
+  const woSites = sites.filter(s => s.woActualDate && s.woActualDate.startsWith(month));
+
+  const panel = document.getElementById('detailPanel');
+  panel.style.display = 'block';
+
+  const loiRows = loiSites.map(s => 
+    `<tr><td>${s.siteName}</td><td>${s.siteType}</td><td>${s.city}</td><td>${s.partnerName}</td><td>${s.loiActualDate}</td></tr>`
+  ).join('') || '<tr><td colspan="5" style="color:#999;text-align:center;">No LOI sent this month</td></tr>';
+
+  const woRows = woSites.map(s => 
+    `<tr><td>${s.siteName}</td><td>${s.siteType}</td><td>${s.city}</td><td>${s.partnerName}</td><td>${s.woActualDate}</td></tr>`
+  ).join('') || '<tr><td colspan="5" style="color:#999;text-align:center;">No WO executed this month</td></tr>';
+
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <h2 style="color:#1a3c5e;font-size:16px;">Monthly Report - ${monthName}</h2>
+      <button class="b-cn" onclick="document.getElementById('detailPanel').style.display='none'">X Close</button>
+    </div>
+    <div class="detail-section">
+      <h3>LOI Sent: ${loiSites.length}</h3>
+      <table style="font-size:11px;"><thead><tr><th>Site</th><th>Type</th><th>City</th><th>Partner</th><th>LOI Date</th></tr></thead>
+      <tbody>${loiRows}</tbody></table>
+    </div>
+    <div class="detail-section">
+      <h3>Work Orders Executed: ${woSites.length}</h3>
+      <table style="font-size:11px;"><thead><tr><th>Site</th><th>Type</th><th>City</th><th>Partner</th><th>WO Date</th></tr></thead>
+      <tbody>${woRows}</tbody></table>
+    </div>`;
+  panel.scrollIntoView({ behavior: 'smooth' });
 }
 
 // --- LOGOUT ---
