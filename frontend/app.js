@@ -136,6 +136,8 @@ function render() {
       <td>${s.commercialCloseDate || '-'}</td><td style="font-weight:bold">${s.loiTargetDate || '-'}</td>
       <td>${s.loiActualDate || '-'}</td><td style="font-weight:bold">${s.woTargetDate || '-'}</td>
       <td>${s.woActualDate || '-'}</td><td>${s.amendmentStatus !== 'None' ? s.amendmentStatus : '-'}</td>
+      <td>${s.contractEndDate || '-'}</td>
+      <td>${s.contractEndDate ? (() => { const d=new Date(s.contractEndDate); d.setDate(d.getDate()-60); const rd=d.toISOString().split('T')[0]; return new Date()<d ? '<span style="color:#27ae60">'+rd+'</span>' : '<span style="color:#e74c3c;font-weight:bold">RENEW NOW</span>'; })() : '-'}</td>
       <td>${s.stpLink ? '<a href="'+s.stpLink+'" target="_blank" style="color:#2980b9;font-size:10px;">Open Link</a>' : '-'}</td>
       <td>${s.capexAmount || '-'}</td>
       <td>${s.capexLockinRemarks || '-'}</td>
@@ -197,6 +199,7 @@ function showForm(id) {
   document.getElementById('fWa').value = s ? s.woActualDate : '';
   document.getElementById('fAm').value = s ? s.amendmentStatus : 'None';
   if(document.getElementById('fSTP')) document.getElementById('fSTP').value = s ? s.stpLink : '';
+  if(document.getElementById('fCed')) document.getElementById('fCed').value = s ? s.contractEndDate : '';
   if(document.getElementById('fCapex')) document.getElementById('fCapex').value = s ? s.capexAmount : '';
   if(document.getElementById('fCapexRemarks')) document.getElementById('fCapexRemarks').value = s ? s.capexLockinRemarks : '';
   document.getElementById('fRm').value = s ? s.remarks : '';
@@ -251,6 +254,7 @@ async function saveSite() {
     woActualDate: document.getElementById('fWa').value,
     amendmentStatus: document.getElementById('fAm').value,
     stpLink: document.getElementById('fSTP') ? document.getElementById('fSTP').value.trim() : '',
+    contractEndDate: document.getElementById('fCed') ? document.getElementById('fCed').value : '',
     capexAmount: document.getElementById('fCapex') ? document.getElementById('fCapex').value.trim() : '',
     capexLockinRemarks: document.getElementById('fCapexRemarks') ? document.getElementById('fCapexRemarks').value.trim() : '',
     remarks: document.getElementById('fRm').value.trim(),
@@ -385,10 +389,11 @@ async function deleteDoc(siteId, docId) {
 
 // --- EXPORT ---
 function exportData() {
-  const headers = ['Site Name','Type','City','Partner','POC Name','POC Email','Commercial Close','LOI Target','LOI Actual','WO Target','WO Actual','Amendment Status','Committed Spend','Lock In Remarks','Remarks','Status','Documents','Document Links'];
+  const headers = ['Site Name','Type','City','Partner','POC Name','POC Email','Commercial Close','LOI Target','LOI Actual','WO Target','WO Actual','Contract End Date','Renewal Due','Amendment Status','Committed Spend','Lock In Remarks','Remarks','Status','Documents','Document Links'];
   const rows = sites.map(s => [
     s.siteName, s.siteType, s.city, s.partnerName, s.pocName, s.pocEmail,
     s.commercialCloseDate, s.loiTargetDate, s.loiActualDate, s.woTargetDate, s.woActualDate,
+    s.contractEndDate, s.contractEndDate ? (() => { const d=new Date(s.contractEndDate); d.setDate(d.getDate()-60); return d.toISOString().split('T')[0]; })() : '',
     s.amendmentStatus, s.capexAmount, s.capexLockinRemarks, s.remarks,
     getStatus(s)==='d'?'Completed':getStatus(s)==='w'?'WO Pending':getStatus(s)==='a'?'Amendment':'LOI Pending',
     (s.documents||[]).map(d => d.name).join('; '),
@@ -486,6 +491,69 @@ function showMonthlyReport() {
       <tbody>${woRows}</tbody></table>
     </div>`;
   panel.scrollIntoView({ behavior: 'smooth' });
+}
+
+
+// --- BULK UPLOAD ---
+function showBulkUpload() {
+  const instructions = 'Upload a CSV file with these columns (first row as header):\n\n' +
+    'Site Name, Site Type, City, Partner Name, POC Name, POC Email, Commercial Close Date, ' +
+    'LOI Target Date, LOI Actual Date, WO Target Date, WO Actual Date, Contract End Date, ' +
+    'Amendment Status, S&TP Link, Committed Spend, Lock In Remarks, Manager Email, Remarks\n\n' +
+    'Date format: YYYY-MM-DD (e.g. 2026-04-15)\n' +
+    'Site Type: DG, AG, SSD, Produce, Perishable, Produce & Perishable, FC, Others';
+  alert(instructions);
+  document.getElementById('bulkFile').click();
+}
+
+async function processBulkUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  const lines = text.split('\n').filter(l => l.trim());
+  if (lines.length < 2) { alert('File is empty or has no data rows'); return; }
+
+  const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+  let added = 0;
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = lines[i].match(/(".*?"|[^,]+)/g);
+    if (!values) continue;
+    const row = values.map(v => v.trim().replace(/^"|"$/g, ''));
+
+    const data = {
+      siteName: row[0] || '',
+      siteType: row[1] || '',
+      city: row[2] || '',
+      partnerName: row[3] || '',
+      pocName: row[4] || '',
+      pocEmail: row[5] || '',
+      commercialCloseDate: row[6] || '',
+      loiTargetDate: row[7] || '',
+      loiActualDate: row[8] || '',
+      woTargetDate: row[9] || '',
+      woActualDate: row[10] || '',
+      contractEndDate: row[11] || '',
+      amendmentStatus: row[12] || 'None',
+      stpLink: row[13] || '',
+      capexAmount: row[14] || '',
+      capexLockinRemarks: row[15] || '',
+      managerEmail: row[16] || '',
+      remarks: row[17] || '',
+      createdBy: currentUser
+    };
+
+    if (data.siteName) {
+      try {
+        await fetch(API + '/sites', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+        added++;
+      } catch(e) { console.error('Row ' + i + ' failed:', e); }
+    }
+  }
+
+  alert('Bulk upload complete! ' + added + ' sites added.');
+  event.target.value = '';
+  await fetchSites();
 }
 
 // --- LOGOUT ---
