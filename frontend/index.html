@@ -5,6 +5,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -50,6 +51,8 @@
   <input type="text" id="srch" placeholder=" Search site, city, partner, type..." oninput="render()"/>
   <button class="b-add" onclick="showForm(-1)">+ Add New Site</button>
   <button class="b-exp" onclick="exportData()"> Export Excel</button>
+  <button style="background:#e67e22;color:white;padding:6px 12px;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:bold;" onclick="showBulkUpload()">Bulk Upload</button>
+  <input type="file" id="bulkFile" accept=".csv" style="display:none" onchange="processBulkUpload(event)"/>
 </div>
 
 <!-- Add/Edit Form -->
@@ -76,6 +79,7 @@
     <div class="fl"><label>LOI Actual Sent Date</label><input type="date" id="fLa"/></div>
     <div class="fl"><label>WO Target Date *</label><input type="date" id="fWt" class="req"/></div>
     <div class="fl"><label>WO Actual Date</label><input type="date" id="fWa"/></div>
+    <div class="fl"><label>Contract End Date</label><input type="date" id="fCed"/></div>
     <div class="fl"><label>Amendment Status</label>
       <select id="fAm">
         <option value="None">None</option><option value="Raised">Raised</option>
@@ -133,7 +137,7 @@
       <tr>
         <th>#</th><th>Site Name</th><th>Type</th><th>City</th><th>Partner</th>
         <th>POC</th><th>Comm.Close</th><th>LOI Target</th><th>LOI Actual</th>
-        <th>WO Target</th><th>WO Actual</th><th>Amendment</th><th>S&amp;TP Link</th><th>Committed Spend</th><th>Lock In Remarks</th><th>Status</th><th>Documents</th><th>Actions</th>
+        <th>WO Target</th><th>WO Actual</th><th>Amendment</th><th>Contract End</th><th>Renewal Due</th><th>S&amp;TP Link</th><th>Committed Spend</th><th>Lock In Remarks</th><th>Status</th><th>Documents</th><th>Actions</th>
       </tr>
     </thead>
     <tbody id="tb"></tbody>
