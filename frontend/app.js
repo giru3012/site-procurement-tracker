@@ -193,8 +193,8 @@ function showForm(id) {
   document.getElementById('fWt').value = s ? s.woTargetDate : '';
   document.getElementById('fWa').value = s ? s.woActualDate : '';
   document.getElementById('fAm').value = s ? s.amendmentStatus : 'None';
-  document.getElementById('fCapex').value = s ? s.capexAmount : '';
-  document.getElementById('fCapexRemarks').value = s ? s.capexLockinRemarks : '';
+  if(document.getElementById('fCapex')) document.getElementById('fCapex').value = s ? s.capexAmount : '';
+  if(document.getElementById('fCapexRemarks')) document.getElementById('fCapexRemarks').value = s ? s.capexLockinRemarks : '';
   document.getElementById('fRm').value = s ? s.remarks : '';
 
   // Clear file inputs
@@ -246,8 +246,8 @@ async function saveSite() {
     woTargetDate: document.getElementById('fWt').value,
     woActualDate: document.getElementById('fWa').value,
     amendmentStatus: document.getElementById('fAm').value,
-    capexAmount: document.getElementById('fCapex').value.trim(),
-    capexLockinRemarks: document.getElementById('fCapexRemarks').value.trim(),
+    capexAmount: document.getElementById('fCapex') ? document.getElementById('fCapex').value.trim() : '',
+    capexLockinRemarks: document.getElementById('fCapexRemarks') ? document.getElementById('fCapexRemarks').value.trim() : '',
     remarks: document.getElementById('fRm').value.trim(),
     updatedBy: currentUser
   };
