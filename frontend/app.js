@@ -167,8 +167,15 @@ function updateCards(list) {
   document.getElementById('cA').textContent = list.filter(s => getStatus(s) === 'a').length;
 }
 
+function isRenewalDue(s) {
+  if (!s.contractEndDate) return false;
+  const d = new Date(s.contractEndDate);
+  d.setDate(d.getDate() - 60);
+  return new Date() >= d;
+}
+
 function checkOverdue() {
-  const od = sites.filter(s => isLoiOverdue(s) || isWoOverdue(s));
+  const od = sites.filter(s => isLoiOverdue(s) || isWoOverdue(s) || isRenewalDue(s));
   const b = document.getElementById('ovb');
   if (!od.length) { b.style.display = 'none'; return; }
   b.style.display = 'block';
@@ -176,6 +183,7 @@ function checkOverdue() {
     let items = '';
     if (isLoiOverdue(s)) items += `<li><strong>${s.siteName}</strong> (${s.city}) - LOI overdue by ${daysDiff(s.loiTargetDate)} days</li>`;
     if (isWoOverdue(s)) items += `<li><strong>${s.siteName}</strong> (${s.city}) - WO overdue by ${daysDiff(s.woTargetDate)} days</li>`;
+    if (isRenewalDue(s)) items += `<li><strong>${s.siteName}</strong> (${s.city}) - Contract renewal due (ends ${s.contractEndDate})</li>`;
     return items;
   }).join('');
 }
@@ -496,14 +504,24 @@ function showMonthlyReport() {
 
 // --- BULK UPLOAD ---
 function showBulkUpload() {
-  const instructions = 'Upload a CSV file with these columns (first row as header):\n\n' +
-    'Site Name, Site Type, City, Partner Name, POC Name, POC Email, Commercial Close Date, ' +
-    'LOI Target Date, LOI Actual Date, WO Target Date, WO Actual Date, Contract End Date, ' +
-    'Amendment Status, S&TP Link, Committed Spend, Lock In Remarks, Manager Email, Remarks\n\n' +
-    'Date format: YYYY-MM-DD (e.g. 2026-04-15)\n' +
-    'Site Type: DG, AG, SSD, Produce, Perishable, Produce & Perishable, FC, Others';
-  alert(instructions);
-  document.getElementById('bulkFile').click();
+  const choice = confirm('BULK UPLOAD\n\nClick OK to upload a filled CSV file.\nClick Cancel to download the blank template first.');
+  if (choice) {
+    document.getElementById('bulkFile').click();
+  } else {
+    downloadTemplate();
+  }
+}
+
+function downloadTemplate() {
+  const headers = ['Site Name','Site Type','City','Partner Name','POC Name','POC Email','Commercial Close Date','LOI Target Date','LOI Actual Date','WO Target Date','WO Actual Date','Contract End Date','Amendment Status','S&TP Link','Committed Spend','Lock In Remarks','Manager Email','Remarks'];
+  const sampleRow = ['Mumbai DC-1','SSD','Mumbai','ABC Logistics','Rahul Sharma','rahul@company.com','2026-01-15','2026-02-01','2026-02-01','2026-03-01','2026-03-05','2027-03-05','None','https://portal-link.com','5000000','5 years lock in','manager@company.com','Sample entry - delete this row'];
+  const notes = ['INSTRUCTIONS:','Site Type options: DG AG SSD Produce Perishable Produce & Perishable FC Others','Date format: YYYY-MM-DD (e.g. 2026-04-15)','Amendment Status options: None Raised In Progress Resolved','Delete this sample row and add your data below the header row'];
+  const csv = headers.join(',') + '\n' + sampleRow.map(v => '"'+v+'"').join(',') + '\n\n' + notes.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'SiteTracker_BulkUpload_Template.csv';
+  a.click();
 }
 
 async function processBulkUpload(event) {
