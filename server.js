@@ -219,6 +219,16 @@ async function sendOverdueEmails() {
       overdue.push({ task: 'Work Order', dueDate: site.woTargetDate });
     }
 
+    // Check contract renewal (60 days before end)
+    if (site.contractEndDate) {
+      const endDate = new Date(site.contractEndDate);
+      const renewalDate = new Date(endDate);
+      renewalDate.setDate(renewalDate.getDate() - 60);
+      if (new Date() >= renewalDate) {
+        overdue.push({ task: 'Contract Renewal', dueDate: site.contractEndDate });
+      }
+    }
+
     if (overdue.length && site.pocEmail) {
       const daysDiff = (d) => Math.floor((new Date() - new Date(d)) / 86400000);
       const items = overdue.map(o => `ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${o.task} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â due ${o.dueDate} (${daysDiff(o.dueDate)} days overdue)`).join('\n');
