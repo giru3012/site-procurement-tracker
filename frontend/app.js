@@ -136,6 +136,9 @@ function render() {
       <td>${s.commercialCloseDate || '-'}</td><td style="font-weight:bold">${s.loiTargetDate || '-'}</td>
       <td>${s.loiActualDate || '-'}</td><td style="font-weight:bold">${s.woTargetDate || '-'}</td>
       <td>${s.woActualDate || '-'}</td><td>${s.amendmentStatus !== 'None' ? s.amendmentStatus : '-'}</td>
+      <td>${s.stpLink ? '<a href="'+s.stpLink+'" target="_blank" style="color:#2980b9;font-size:10px;">Open Link</a>' : '-'}</td>
+      <td>${s.capexAmount || '-'}</td>
+      <td>${s.capexLockinRemarks || '-'}</td>
       <td>${badge}</td>
       <td style="max-width:180px;font-size:10px;">${docNames || '<span style="color:#999">No docs</span>'}</td>
       <td style="white-space:nowrap">
@@ -382,7 +385,7 @@ async function deleteDoc(siteId, docId) {
 
 // --- EXPORT ---
 function exportData() {
-  const headers = ['Site Name','Type','City','Partner','POC Name','POC Email','Commercial Close','LOI Target','LOI Actual','WO Target','WO Actual','Amendment Status','Capex Obligation Amount','Capex Lockin Remarks','Remarks','Status','Documents','Document Links'];
+  const headers = ['Site Name','Type','City','Partner','POC Name','POC Email','Commercial Close','LOI Target','LOI Actual','WO Target','WO Actual','Amendment Status','Committed Spend','Lock In Remarks','Remarks','Status','Documents','Document Links'];
   const rows = sites.map(s => [
     s.siteName, s.siteType, s.city, s.partnerName, s.pocName, s.pocEmail,
     s.commercialCloseDate, s.loiTargetDate, s.loiActualDate, s.woTargetDate, s.woActualDate,
