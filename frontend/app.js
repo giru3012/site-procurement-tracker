@@ -461,6 +461,116 @@ async function loadVisitCount() {
   } catch(e) {}
 }
 
+// --- DOCUMENT MANAGER ---
+function showDocManager() {
+  document.getElementById('docManagerPanel').style.display = 'block';
+  // Populate site dropdown
+  const select = document.getElementById('docBulkSite');
+  select.innerHTML = '<option value="">-- Select Site --</option>' +
+    sites.map(s => `<option value="${s.id}">${s.siteName} (${s.city})</option>`).join('');
+  searchDocuments();
+  document.getElementById('docManagerPanel').scrollIntoView({ behavior: 'smooth' });
+}
+
+function searchDocuments() {
+  const query = (document.getElementById('docSearch').value || '').toLowerCase();
+  const catFilter = document.getElementById('docCatFilter').value;
+  
+  let results = [];
+  sites.forEach(s => {
+    (s.documents || []).forEach(d => {
+      const matchesQuery = !query || 
+        s.siteName.toLowerCase().includes(query) || 
+        d.name.toLowerCase().includes(query) ||
+        (d.category || '').toLowerCase().includes(query);
+      const matchesCat = !catFilter || d.category === catFilter;
+      if (matchesQuery && matchesCat) {
+        results.push({ ...d, siteName: s.siteName, city: s.city, siteId: s.id });
+      }
+    });
+  });
+
+  const container = document.getElementById('docSearchResults');
+  if (!results.length) {
+    container.innerHTML = '<p style="color:#999;font-size:12px;">No documents found. Try a different search.</p>';
+    return;
+  }
+
+  container.innerHTML = `<p style="font-size:11px;color:#666;margin-bottom:6px;">Found ${results.length} document(s):</p>` +
+    '<table style="width:100%;font-size:11px;border-collapse:collapse;">' +
+    '<thead><tr style="background:#f0f0f0;"><th style="padding:5px;">Site</th><th style="padding:5px;">Document</th><th style="padding:5px;">Category</th><th style="padding:5px;">Version</th><th style="padding:5px;">Uploaded By</th><th style="padding:5px;">Date</th><th style="padding:5px;">Download</th></tr></thead><tbody>' +
+    results.map(d => `<tr style="border-bottom:1px solid #eee;">
+      <td style="padding:5px;">${d.siteName} (${d.city})</td>
+      <td style="padding:5px;">${d.name}</td>
+      <td style="padding:5px;"><span class="stb">${d.category || 'Other'}</span></td>
+      <td style="padding:5px;">v${d.version || 1}</td>
+      <td style="padding:5px;">${d.uploadedBy || '-'}</td>
+      <td style="padding:5px;">${d.uploadedAt ? d.uploadedAt.split('T')[0] : '-'}</td>
+      <td style="padding:5px;"><a href="${d.path}" target="_blank" style="color:#2980b9;font-weight:bold;">Download</a></td>
+    </tr>`).join('') +
+    '</tbody></table>';
+}
+
+async function bulkDocUpload() {
+  const mode = document.getElementById('docBulkMode').value;
+  const category = document.getElementById('docBulkCat').value;
+  const files = document.getElementById('docBulkFiles').files;
+
+  if (!files.length) { alert('Please select files to upload'); return; }
+
+  if (mode === 'single') {
+    // Upload all files to one selected site
+    const siteId = document.getElementById('docBulkSite').value;
+    if (!siteId) { alert('Please select a site'); return; }
+    await apiUploadDocs(siteId, files, category);
+    alert(files.length + ' document(s) uploaded successfully!');
+  } else {
+    // Auto-match mode: filename must start with site name
+    // e.g. "Mumbai DC-1_Commercial.pdf" matches site "Mumbai DC-1"
+    let matched = 0, unmatched = [];
+
+    for (const file of files) {
+      const fileName = file.name;
+      // Try to match site name from filename (before first _ or -)
+      let matchedSite = null;
+
+      for (const s of sites) {
+        if (fileName.toLowerCase().startsWith(s.siteName.toLowerCase().replace(/[^a-z0-9]/g, ''))) {
+          matchedSite = s;
+          break;
+        }
+        // Also try exact site name match anywhere in filename
+        if (fileName.toLowerCase().includes(s.siteName.toLowerCase())) {
+          matchedSite = s;
+          break;
+        }
+      }
+
+      if (matchedSite) {
+        const fd = new FormData();
+        fd.append('files', file);
+        fd.append('category', category);
+        fd.append('uploadedBy', currentUser);
+        await fetch(API + '/sites/' + matchedSite.id + '/documents', { method: 'POST', body: fd });
+        matched++;
+      } else {
+        unmatched.push(fileName);
+      }
+    }
+
+    let msg = matched + ' document(s) uploaded and matched to sites.';
+    if (unmatched.length) {
+      msg += '\n\nCould not match ' + unmatched.length + ' file(s):\n' + unmatched.slice(0, 10).join('\n');
+      msg += '\n\nTip: File name must contain the exact site name.';
+    }
+    alert(msg);
+  }
+
+  document.getElementById('docBulkFiles').value = '';
+  await fetchSites();
+  searchDocuments();
+}
+
 // --- MONTHLY FILTER ---
 function showMonthlyReport() {
   const month = document.getElementById('monthFilter').value;
