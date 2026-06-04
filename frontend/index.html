@@ -6,6 +6,7 @@
 
 
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -53,6 +54,72 @@
   <button class="b-exp" onclick="exportData()"> Export Excel</button>
   <button style="background:#e67e22;color:white;padding:6px 12px;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:bold;" onclick="showBulkUpload()">Bulk Upload</button>
   <input type="file" id="bulkFile" accept=".csv" style="display:none" onchange="processBulkUpload(event)"/>
+  <button style="background:#8e44ad;color:white;padding:6px 12px;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:bold;" onclick="showDocManager()">Document Manager</button>
+</div>
+
+<!-- Document Manager Panel -->
+<div id="docManagerPanel" style="display:none;background:white;border:2px solid #8e44ad;border-radius:8px;margin:0 20px 14px;padding:18px 22px;box-shadow:0 4px 14px rgba(0,0,0,0.1);">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <h2 style="color:#8e44ad;font-size:16px;">Document Manager</h2>
+    <button class="b-cn" onclick="document.getElementById('docManagerPanel').style.display='none'">X Close</button>
+  </div>
+
+  <!-- Document Search -->
+  <div style="margin-bottom:14px;padding:12px;background:#f8f9fa;border-radius:6px;">
+    <h3 style="font-size:13px;color:#333;margin-bottom:8px;">Search &amp; Download Documents</h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <input type="text" id="docSearch" placeholder="Search by site name, document name, or category..." style="flex:1;min-width:200px;padding:6px 10px;border:1px solid #ccc;border-radius:5px;font-size:12px;" oninput="searchDocuments()"/>
+      <select id="docCatFilter" style="padding:6px;border:1px solid #ccc;border-radius:5px;font-size:12px;" onchange="searchDocuments()">
+        <option value="">All Categories</option>
+        <option value="Commercial">Commercial</option>
+        <option value="BRS">BRS</option>
+        <option value="LOI">LOI</option>
+        <option value="Work Order">Work Order</option>
+        <option value="Site Survey">Site Survey</option>
+        <option value="Amendment">Amendment</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    <div id="docSearchResults" style="margin-top:10px;max-height:300px;overflow-y:auto;"></div>
+  </div>
+
+  <!-- Bulk Document Upload -->
+  <div style="padding:12px;background:#fef9e7;border-radius:6px;">
+    <h3 style="font-size:13px;color:#333;margin-bottom:8px;">Bulk Document Upload</h3>
+    <div style="margin-bottom:10px;">
+      <label style="font-size:11px;font-weight:bold;">Upload Mode:</label>
+      <select id="docBulkMode" style="padding:5px;border:1px solid #ccc;border-radius:4px;font-size:12px;margin-left:8px;" onchange="document.getElementById('singleSiteRow').style.display=this.value==='single'?'block':'none'">
+        <option value="auto">Auto-match (file name contains site name)</option>
+        <option value="single">Single site (upload all to one site)</option>
+      </select>
+    </div>
+    <p style="font-size:11px;color:#666;margin-bottom:8px;"><strong>Auto-match:</strong> Name files with site name, e.g. "Mumbai DC-1_Commercial.pdf" — the tool will match and upload to the correct site automatically.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end;">
+      <div id="singleSiteRow" style="display:none;">
+        <label style="font-size:11px;font-weight:bold;">Site Name</label>
+        <select id="docBulkSite" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;font-size:12px;">
+          <option value="">-- Select Site --</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:bold;">Document Category</label>
+        <select id="docBulkCat" style="width:100%;padding:6px;border:1px solid #ccc;border-radius:4px;font-size:12px;">
+          <option value="Commercial">Commercial</option>
+          <option value="BRS">BRS</option>
+          <option value="LOI">LOI</option>
+          <option value="Work Order">Work Order</option>
+          <option value="Site Survey">Site Survey</option>
+          <option value="Amendment">Amendment</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:11px;font-weight:bold;">Select Files</label>
+        <input type="file" id="docBulkFiles" multiple accept=".pdf,.doc,.docx,.xlsx,.xls,.jpg,.jpeg,.png"/>
+      </div>
+    </div>
+    <button style="margin-top:10px;background:#8e44ad;color:white;padding:8px 16px;border:none;border-radius:5px;cursor:pointer;font-size:12px;font-weight:bold;" onclick="bulkDocUpload()">Upload Documents</button>
+  </div>
 </div>
 
 <!-- Add/Edit Form -->
