@@ -170,6 +170,34 @@ def delete_document(site_id, doc_id):
     write_sites(sites)
     return jsonify({'success': True})
 
+# --- Split Template API ---
+TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), 'templates')
+os.makedirs(TEMPLATE_DIR, exist_ok=True)
+
+@app.route('/api/split-template', methods=['POST'])
+def upload_split_template():
+    file = request.files.get('file')
+    if not file: return jsonify({'error': 'No file'}), 400
+    filename = secure_filename(file.filename)
+    file.save(os.path.join(TEMPLATE_DIR, filename))
+    # Save metadata
+    json.dump({'filename': filename}, open(os.path.join(TEMPLATE_DIR, 'meta.json'), 'w'))
+    return jsonify({'success': True, 'filename': filename})
+
+@app.route('/api/split-template', methods=['GET'])
+def get_split_template():
+    meta_file = os.path.join(TEMPLATE_DIR, 'meta.json')
+    if not os.path.exists(meta_file): return jsonify({})
+    meta = json.load(open(meta_file))
+    return jsonify({'filename': meta.get('filename', ''), 'path': '/api/split-template/download'})
+
+@app.route('/api/split-template/download', methods=['GET'])
+def download_split_template():
+    meta_file = os.path.join(TEMPLATE_DIR, 'meta.json')
+    if not os.path.exists(meta_file): return jsonify({'error': 'No template'}), 404
+    meta = json.load(open(meta_file))
+    return send_from_directory(TEMPLATE_DIR, meta['filename'], as_attachment=True)
+
 # --- Visits API ---
 @app.route('/api/visits', methods=['POST'])
 def track_visit():
