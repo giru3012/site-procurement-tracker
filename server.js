@@ -157,7 +157,7 @@ app.post('/api/sites/:siteId/documents/:docId/amend', upload.single('file'), (re
   };
 
   sites[idx].amendments = [...(sites[idx].amendments || []), amendment];
-  sites[idx].activityLog = [...(sites[idx].activityLog || []), { action: `Amended "${oldDoc.name}" (v${oldDoc.version} ÃƒÂ¢Ã¢â‚¬ Ã¢â‚¬â„¢ v${newVersion})`, by: req.body.amendedBy || 'System', at: new Date().toISOString() }];
+  sites[idx].activityLog = [...(sites[idx].activityLog || []), { action: `Amended "${oldDoc.name}" (v${oldDoc.version} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬ ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ v${newVersion})`, by: req.body.amendedBy || 'System', at: new Date().toISOString() }];
   sites[idx].updatedAt = new Date().toISOString();
   writeSites(sites);
   res.json({ amendment, document: sites[idx].documents[docIdx] });
@@ -231,13 +231,13 @@ async function sendOverdueEmails() {
 
     if (overdue.length && site.pocEmail) {
       const daysDiff = (d) => Math.floor((new Date() - new Date(d)) / 86400000);
-      const items = overdue.map(o => `ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ ${o.task} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â due ${o.dueDate} (${daysDiff(o.dueDate)} days overdue)`).join('\n');
+      const items = overdue.map(o => `ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${o.task} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â due ${o.dueDate} (${daysDiff(o.dueDate)} days overdue)`).join('\n');
 
       await transporter.sendMail({
         from: '"Site Procurement Tracker" <tracker-noreply@yourcompany.com>',
         to: site.pocEmail,
-        subject: `ÃƒÂ¢Ã…Â¡ ÃƒÂ¯Ã‚Â¸Ã‚Â [OVERDUE] ${site.siteName} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Action Required`,
-        text: `Hi ${site.pocName},\n\nThe following tasks for site "${site.siteName}" (${site.city}) are overdue:\n\n${items}\n\nPlease update the tracker or escalate if blocked.\n\nÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Site Procurement Tracker`
+        subject: `ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã‚Â¡ ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â [OVERDUE] ${site.siteName} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Action Required`,
+        text: `Hi ${site.pocName},\n\nThe following tasks for site "${site.siteName}" (${site.city}) are overdue:\n\n${items}\n\nPlease update the tracker or escalate if blocked.\n\nÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Site Procurement Tracker`
       }).catch(err => console.error('Email failed for', site.siteName, err.message));
     }
   }
@@ -246,6 +246,35 @@ async function sendOverdueEmails() {
 
 // Run daily at 9 AM
 cron.schedule('0 9 * * *', sendOverdueEmails);
+
+// --- Split Template ---
+const TEMPLATE_DIR = path.join(__dirname, 'templates');
+fs.mkdirSync(TEMPLATE_DIR, { recursive: true });
+
+app.post('/api/split-template', (req, res) => {
+  const multerSingle = multer({ dest: TEMPLATE_DIR }).single('file');
+  multerSingle(req, res, (err) => {
+    if (err || !req.file) return res.status(400).json({ error: 'No file' });
+    const destPath = path.join(TEMPLATE_DIR, req.file.originalname);
+    fs.renameSync(req.file.path, destPath);
+    fs.writeFileSync(path.join(TEMPLATE_DIR, 'meta.json'), JSON.stringify({ filename: req.file.originalname }));
+    res.json({ success: true, filename: req.file.originalname });
+  });
+});
+
+app.get('/api/split-template', (req, res) => {
+  const metaFile = path.join(TEMPLATE_DIR, 'meta.json');
+  if (!fs.existsSync(metaFile)) return res.json({});
+  const meta = JSON.parse(fs.readFileSync(metaFile, 'utf8'));
+  res.json({ filename: meta.filename, path: '/api/split-template/download' });
+});
+
+app.get('/api/split-template/download', (req, res) => {
+  const metaFile = path.join(TEMPLATE_DIR, 'meta.json');
+  if (!fs.existsSync(metaFile)) return res.status(404).json({ error: 'No template' });
+  const meta = JSON.parse(fs.readFileSync(metaFile, 'utf8'));
+  res.download(path.join(TEMPLATE_DIR, meta.filename));
+});
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
