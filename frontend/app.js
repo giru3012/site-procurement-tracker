@@ -47,6 +47,7 @@ async function fetchSites() {
   }
   render();
   checkOverdue();
+  populatePartnerDropdown();
 }
 
 async function apiCreateSite(data) {
@@ -461,6 +462,92 @@ async function loadVisitCount() {
   } catch(e) {}
 }
 
+// --- SPLIT TEMPLATE ---
+async function uploadSplitTemplate() {
+  const file = document.getElementById('splitTemplateFile').files[0];
+  if (!file) { alert('Please select a file'); return; }
+  const fd = new FormData();
+  fd.append('file', file);
+  const res = await fetch(API + '/split-template', { method: 'POST', body: fd });
+  if (res.ok) {
+    alert('Template uploaded!');
+    loadSplitTemplate();
+    document.getElementById('splitTemplateFile').value = '';
+  }
+}
+
+async function loadSplitTemplate() {
+  try {
+    const res = await fetch(API + '/split-template');
+    const data = await res.json();
+    if (data.filename) {
+      document.getElementById('splitTemplateLink').href = data.path;
+      document.getElementById('splitTemplateLink').textContent = 'Download: ' + data.filename;
+      document.getElementById('splitTemplateLink').style.display = 'inline';
+      document.getElementById('splitNoFile').style.display = 'none';
+    }
+  } catch(e) {}
+}
+
+// --- PARTNER SUMMARY ---
+function populatePartnerDropdown() {
+  const partners = [...new Set(sites.map(s => s.partnerName).filter(Boolean))].sort();
+  const select = document.getElementById('partnerFilter');
+  select.innerHTML = '<option value="">-- Select Partner --</option>' +
+    partners.map(p => `<option value="${p}">${p}</option>`).join('');
+}
+
+function showPartnerSummary() {
+  const partner = document.getElementById('partnerFilter').value;
+  const panel = document.getElementById('partnerSummaryPanel');
+  if (!partner) { panel.style.display = 'none'; return; }
+
+  const partnerSites = sites.filter(s => s.partnerName === partner);
+  panel.style.display = 'block';
+
+  // Site type breakdown
+  const typeCount = {};
+  partnerSites.forEach(s => { const t = s.siteType || 'Other'; typeCount[t] = (typeCount[t] || 0) + 1; });
+  const typeSummary = Object.entries(typeCount).map(([t, c]) => '<span style="background:#eee;padding:2px 8px;border-radius:10px;font-size:11px;margin-right:4px;"><strong>' + t + ':</strong> ' + c + '</span>').join('');
+
+  const totalSites = partnerSites.length;
+  const completed = partnerSites.filter(s => s.woActualDate).length;
+  const loiPending = partnerSites.filter(s => !s.loiActualDate).length;
+  const woPending = partnerSites.filter(s => s.loiActualDate && !s.woActualDate).length;
+
+  const siteRows = partnerSites.map(s => {
+    const status = s.woActualDate ? '<span class="badge bd">Completed</span>' :
+                   s.loiActualDate ? '<span class="badge bw">WO Pending</span>' :
+                   '<span class="badge bl">LOI Pending</span>';
+    return `<tr>
+      <td style="padding:4px 8px;">${s.siteName}</td>
+      <td style="padding:4px 8px;">${s.siteType || '-'}</td>
+      <td style="padding:4px 8px;">${s.city || '-'}</td>
+      <td style="padding:4px 8px;">${s.commercialCloseDate || '-'}</td>
+      <td style="padding:4px 8px;">${s.loiActualDate || '-'}</td>
+      <td style="padding:4px 8px;">${s.woActualDate || '-'}</td>
+      <td style="padding:4px 8px;">${s.contractEndDate || '-'}</td>
+      <td style="padding:4px 8px;">${s.capexAmount || '-'}</td>
+      <td style="padding:4px 8px;">${s.capexLockinRemarks || '-'}</td>
+      <td style="padding:4px 8px;">${status}</td>
+    </tr>`;
+  }).join('');
+
+  panel.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <h3 style="color:#1a3c5e;font-size:14px;">Partner: ${partner}</h3>
+      <button class="b-cn" onclick="document.getElementById('partnerSummaryPanel').style.display='none'">X Close</button>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap;">
+      <span style="font-size:12px;"><strong>Total Sites:</strong> ${totalSites}</span>
+      <span style="font-size:12px;color:#27ae60;"><strong>Completed:</strong> ${completed}</span>
+      <span style="font-size:12px;color:#e67e22;"><strong>WO Pending:</strong> ${woPending}</span>
+      <span style="font-size:12px;color:#c0392b;"><strong>LOI Pending:</strong> ${loiPending}</span>
+    </div>
+    <div style="margin-bottom:12px;"><strong style="font-size:11px;color:#1a3c5e;">By Site Type:</strong> ${typeSummary}</div>
+`;
+}
+
 // --- DOCUMENT MANAGER ---
 function showDocManager() {
   document.getElementById('docManagerPanel').style.display = 'block';
@@ -700,6 +787,7 @@ function togAdm() {
   } else {
     adminMode = false;
     document.getElementById('aBtn').textContent = 'Admin Mode [OFF]';
+    document.getElementById('splitUploadDiv').style.display = 'none';
     document.getElementById('aBtn').className = 'b-adm';
     document.getElementById('adb').style.display = 'none';
     render();
@@ -710,6 +798,7 @@ function verifyPin() {
   if (document.getElementById('pIn').value === ADMIN_PIN) {
     adminMode = true;
     document.getElementById('aBtn').textContent = 'Admin Mode [ON]';
+    document.getElementById('splitUploadDiv').style.display = 'block';
     document.getElementById('aBtn').className = 'b-adm-on';
     document.getElementById('adb').style.display = 'block';
     document.getElementById('po').style.display = 'none';
@@ -721,4 +810,4 @@ function verifyPin() {
 }
 
 // --- INIT ---
-if (currentUser) { trackVisit(); fetchSites(); }
+if (currentUser) { trackVisit(); fetchSites(); loadSplitTemplate(); }
